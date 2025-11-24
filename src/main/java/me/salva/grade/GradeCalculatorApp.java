@@ -1,13 +1,13 @@
-package me.salva.software;
+package me.salva.grade;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class SoftwareApp {
+public class GradeCalculatorApp {
 
     public static void main(String[] args) {
-        SpringApplication.run(SoftwareApp.class, args);
+        SpringApplication.run(GradeCalculatorApp.class, args);
     }
 
 }

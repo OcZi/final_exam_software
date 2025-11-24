@@ -1,4 +1,12 @@
-package me.salva.software.domain.repository;
+package me.salva.grade.domain.repository;
 
-public class GradeRepository {
+import me.salva.grade.domain.model.Grade;
+import java.util.Optional;
+
+/**
+ * Domain port for persistence.
+ */
+public interface GradeRepository {
+    Optional<Grade> findById(String studentId);
+    void save(Grade grade);
 }

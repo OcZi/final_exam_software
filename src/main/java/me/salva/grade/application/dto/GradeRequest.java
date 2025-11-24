@@ -1,4 +1,6 @@
-package me.salva.software.application.dto;
+package me.salva.grade.application.dto;
 
-public record GradeRequest(double midterm, double project, double finalExam) {}
-
+/**
+ * Request DTO for the use case. Here we ask to calculate by studentId.
+ */
+public record GradeRequest(String studentId) {}

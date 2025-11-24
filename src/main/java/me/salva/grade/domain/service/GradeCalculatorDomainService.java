@@ -1,12 +1,32 @@
-package me.salva.software.domain.service;
+package me.salva.grade.domain.service;
 
-
-import me.salva.software.domain.model.Grade;
+import me.salva.grade.domain.model.Grade;
 
 public class GradeCalculatorDomainService {
+
     public double calculateFinal(Grade grade) {
-        return (grade.getMidterm() * 0.3) +
-                (grade.getProject() * 0.3) +
-                (grade.getFinalExam() * 0.4);
+
+        double weighted = grade.getEvaluations()
+                .stream()
+                .mapToDouble(e -> e.getGrade() * e.getWeight())
+                .sum();
+
+        // penalización por asistencia
+        if (!grade.hasReachedMinimumClasses()) {
+            throw new IllegalStateException("Attendance not met");
+        }
+
+        // aplicar extra SOLO si hay >= 2 años con true
+        long approvedYears = grade.getAllYearsTeachers()
+                .values()
+                .stream()
+                .filter(Boolean::booleanValue)
+                .count();
+
+        if (approvedYears >= 2) {
+            weighted += 1.0;
+        }
+
+        return Math.min(weighted, 20.0);
     }
 }
