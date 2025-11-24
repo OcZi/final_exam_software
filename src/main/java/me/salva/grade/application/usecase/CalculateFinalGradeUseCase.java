@@ -2,17 +2,14 @@ package me.salva.grade.application.usecase;
 
 import me.salva.grade.application.dto.GradeRequest;
 import me.salva.grade.application.dto.GradeResponse;
-import me.salva.grade.application.dto.GradeResponse;
-import me.salva.grade.domain.model.Grade;
 import me.salva.grade.domain.model.Evaluation;
+import me.salva.grade.domain.model.Grade;
 import me.salva.grade.domain.repository.GradeRepository;
 import me.salva.grade.domain.service.GradeCalculatorDomainService;
 
+import java.math.BigDecimal;
 import java.util.List;
 
-/**
- * Application service (use case): orchestrates repository + domain service.
- */
 public class CalculateFinalGradeUseCase {
 
     private final GradeRepository repository;
@@ -27,27 +24,24 @@ public class CalculateFinalGradeUseCase {
         Grade grade = repository.findById(request.studentId())
                 .orElseThrow(() -> new IllegalArgumentException("Student not found: " + request.studentId()));
 
-        List<Evaluation> evaluations = grade.getEvaluations();
-        double weightedAverage = evaluations.stream()
-                .mapToDouble(e -> e.getGrade() * e.getWeight())
-                .sum();
+        List<Evaluation> evaluations = grade.getExamsStudents();
+        BigDecimal weightedAverage = evaluations.stream()
+                .map(e -> BigDecimal.valueOf(e.getGrade()).multiply(BigDecimal.valueOf(e.getWeight())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(2, BigDecimal.ROUND_HALF_UP);
 
-        double finalGrade = domainService.calculateFinal(grade);
+        BigDecimal finalGrade = domainService.calculateFinalDecimal(grade);
 
-        // FIX → redondeo a entero exacto para que coincida con el test
-        finalGrade = Math.round(finalGrade);
-
-        boolean appliedAttendancePenalty = !grade.hasReachedMinimumClasses();
-        boolean appliedExtraPoints = (finalGrade > weightedAverage) && !appliedAttendancePenalty;
+        boolean appliedAttendancePenalty = !grade.isHasReachedMinimumClasses();
+        boolean appliedExtraPoints = finalGrade.compareTo(weightedAverage) > 0 && !appliedAttendancePenalty;
 
         return new GradeResponse(
                 grade.getStudentId(),
-                Math.round(weightedAverage * 100.0) / 100.0,
-                finalGrade,
+                weightedAverage.doubleValue(),
+                finalGrade.doubleValue(),
                 appliedAttendancePenalty,
                 appliedExtraPoints,
                 evaluations
         );
     }
-
 }

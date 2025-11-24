@@ -1,13 +1,13 @@
 package me.salva.grade.domain.model;
 
+import java.math.BigDecimal;
 import java.util.*;
 
-/**
- * Aggregate root: Grade (represents a student' grading context)
- */
 public class Grade {
     private final String studentId;
-    private final List<Evaluation> evaluations = new ArrayList<>();
+
+    // nombres literales requeridos por el enunciado
+    private final List<Evaluation> examsStudents = new ArrayList<>();
     private boolean hasReachedMinimumClasses;
     private final Map<Integer, Boolean> allYearsTeachers = new HashMap<>();
 
@@ -15,43 +15,30 @@ public class Grade {
         this.studentId = Objects.requireNonNull(studentId);
     }
 
-    // Behavior: add evaluation (RF01)
+    // RF01 + RNF01
     public void addEvaluation(Evaluation e) {
-        if (evaluations.size() >= 10) {
-            throw new IllegalStateException("Max evaluations (10) reached");
-        }
         Objects.requireNonNull(e);
-        evaluations.add(e);
+        if (examsStudents.size() >= 10) {
+            throw new IllegalStateException("Max 10 evaluations allowed");
+        }
+        // validate individual weight
+        if (e.getWeight() <= 0 || e.getWeight() > 1) throw new IllegalArgumentException("invalid weight");
+        examsStudents.add(e);
     }
 
-    public List<Evaluation> getEvaluations() {
-        return Collections.unmodifiableList(evaluations);
-    }
+    public List<Evaluation> getExamsStudents() { return Collections.unmodifiableList(examsStudents); }
 
-    public String getStudentId() {
-        return studentId;
-    }
-
-    public boolean hasReachedMinimumClasses() {
-        return hasReachedMinimumClasses;
-    }
+    public String getStudentId() { return studentId; }
 
     // RF02
-    public void setHasReachedMinimumClasses(boolean reached) {
-        this.hasReachedMinimumClasses = reached;
-    }
+    public boolean isHasReachedMinimumClasses() { return hasReachedMinimumClasses; }
+    public void setHasReachedMinimumClasses(boolean hasReachedMinimumClasses) { this.hasReachedMinimumClasses = hasReachedMinimumClasses; }
 
-    // RF03: teacher approvals per year
-    public Map<Integer, Boolean> getAllYearsTeachers() {
-        return allYearsTeachers;
-    }
+    // RF03
+    public Map<Integer, Boolean> getAllYearsTeachers() { return allYearsTeachers; }
+    public void setTeacherApprovalForYear(int year, boolean approved) { allYearsTeachers.put(year, approved); }
 
-    public void setTeacherApprovalForYear(int year, boolean approved) {
-        allYearsTeachers.put(year, approved);
-    }
-
-    // convenience: sum of weights (validation helper)
     public double totalWeight() {
-        return evaluations.stream().mapToDouble(Evaluation::getWeight).sum();
+        return examsStudents.stream().mapToDouble(Evaluation::getWeight).sum();
     }
 }
